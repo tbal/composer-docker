@@ -1,5 +1,8 @@
 #!/bin/bash
 
+DOCKER_UID=${DOCKER_UID:-1}
+DOCKER_USER=${DOCKER_USER:-root}
+
 isCommand() {
   for cmd in \
     "about" \
@@ -55,6 +58,12 @@ elif [ "$1" = 'composer' ]; then
 # check if the first argument passed in matches a known command
 elif isCommand "$1"; then
   set -- /sbin/tini -- composer "$@"
+fi
+
+# run under uid/user specified if not equal to defaults
+if [ "root" != "$DOCKER_USER" ] && [ "1" != "$DOCKER_UID" ]; then
+  adduser -H -D -u "$DOCKER_UID" "$DOCKER_USER"
+  set -- su-exec "$DOCKER_USER" "$@"
 fi
 
 exec "$@"
